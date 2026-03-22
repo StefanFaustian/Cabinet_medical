@@ -60,7 +60,7 @@ public:
         strcpy(this->nume, nume);
     }
 
-    void setTelefon(char* telefon) {
+    void setTelefon(const char* telefon) {
         delete[] this->telefon;
         this->telefon = new char[strlen(telefon) + 1];
         strcpy(this->telefon, telefon);

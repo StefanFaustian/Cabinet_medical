@@ -2,19 +2,21 @@
 // Pacientii - sunt cei care vin la cabinet pentru a beneficia de servicii medicale care sunt oferite doar pe baza de programare
 // Medicii - sunt cei care efectueaza serviciile medicale
 // Programarile - sunt generate de pacienti pentru medici
-// Consultatiile - reprezinta scopul programarilor si sunt realizate de medici pentru pacienti
+// Consultatiile - reprezinta scopul programarilor si sunt realizate de medici pentru pacienti in baza unui tarif
 // Retetele - sunt generate dupa o consultatie
+// Clasele Data si Ora ajuta la lucrul cu reprele temporale
+// La crearea obiectelor specifice unei clase, ele sunt inserate intr-un array alocat dinamic cu un nume sugestive (de exemplu, Medic* medici)
 
 #include <iostream>
 #include <cstring>
 
-//--- Functii de prelucrare a sirurilor de caractere ---//
+//--- Functie de prelucrare a sirurilor de caractere ---//
 char* trim(const char* str) {
     int i = 0;
     while (str[i] == ' ')
         i++;
     int n = strlen(str);
-    while (n >= 0 && str[n-1] == ' ')
+    while (n > 0 && str[n-1] == ' ')
         n--;
 
     char* rez = new char[n + 2];
@@ -228,33 +230,8 @@ public:
         return telefon;
     }
 
-    bool getAsigurat() const {
+    const bool getAsigurat() const {
         return asigurat;
-    }
-
-    int getVarsta() const {
-        return varsta;
-    }
-
-    // Setters
-    void setNume(const char* numeNou) {
-        delete[] nume;
-        nume = new char[strlen(numeNou) + 1];
-        strcpy(nume, numeNou);
-    }
-
-    void setTelefon(const char* telefonNou) {
-        delete[] telefon;
-        telefon = new char[strlen(telefonNou) + 1];
-        strcpy(telefon, telefonNou);
-    }
-
-    void setAsigurat(const bool asiguratNou) {
-        asigurat = asiguratNou;
-    }
-
-    void setVarsta(const int varstaNoua) {
-        varsta = varstaNoua;
     }
 
     Pacient& operator=(const Pacient& nou) {
@@ -273,13 +250,12 @@ public:
         return *this;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const Pacient& P);
-
     ~Pacient() {
         delete[] nume;
         delete[] telefon;
     }
 
+    friend std::ostream& operator<<(std::ostream& out, const Pacient& P);
     float calculeazaReducere(float tarifInitial) const;
 };
 
@@ -324,27 +300,12 @@ public:
     }
 
     // Getters
-
     const char* getNume() const {
         return nume;
     }
 
     const char* getSpecializare() const {
         return specializare;
-    }
-
-    // Setters
-
-    void setNume(const char* numeNou) {
-        delete[] nume;
-        nume = new char[strlen(numeNou) + 1];
-        strcpy(nume, numeNou);
-    }
-
-    void setSpecializare(const char* specializareNoua) {
-        delete[] specializare;
-        specializare = new char[strlen(specializareNoua) + 1];
-        strcpy(specializare, specializareNoua);
     }
 
     Medic& operator=(const Medic& nou) {
@@ -376,7 +337,7 @@ std::ostream& operator<<(std::ostream& out, const Medic& M) {
 }
 
 class Reteta {
-    const int idReteta;
+    int idReteta;
     Medic medic;
     Pacient pacient;
     int durata;
@@ -384,7 +345,7 @@ class Reteta {
     Data dataEmitere;
     static int contorId;
 public:
-    Reteta() : idReteta(++contorId), durata(0) {
+    Reteta() : idReteta(0), durata(0) {
         tratament = new char[strlen("Necompletat") + 1];
         strcpy(tratament, "Necompletat");
     }
@@ -394,13 +355,14 @@ public:
         strcpy(this->tratament, tratament);
     }
 
-    Reteta(const Reteta& nou) : idReteta(++contorId), medic(nou.medic), pacient(nou.pacient), durata(nou.durata), dataEmitere(nou.dataEmitere) {
+    Reteta(const Reteta& nou) : idReteta(nou.idReteta), medic(nou.medic), pacient(nou.pacient), durata(nou.durata), dataEmitere(nou.dataEmitere) {
         tratament = new char[strlen(nou.tratament) + 1];
         strcpy(tratament, nou.tratament);
     }
 
     Reteta& operator=(const Reteta& R) {
         if (this != &R) {
+            idReteta = R.idReteta;
             medic = R.medic;
             pacient = R.pacient;
             durata = R.durata;
@@ -425,7 +387,7 @@ std::ostream& operator<<(std::ostream& out, const Reteta& R) {
     out<<"Reteta #"<<R.idReteta<<'\n';
     out<<R.pacient;
     out<<R.medic;
-    out<<"Tratament: "<<R.tratament<<'\n';
+    out<<"\nTratament: "<<R.tratament<<'\n';
     out<<"Durata: "<<R.durata<<" zile\n";
     out<<"Data prescriere: "<<R.dataEmitere<<'\n';
     out<<"------------------------------------\n";
@@ -490,7 +452,6 @@ bool Programare::esteInViitor(const Data& dataAzi) const {
     return dataAzi < dataProgramarii;
 }
 
-
 class Consultatie {
     Programare programare;
     char* diagnostic;
@@ -510,9 +471,6 @@ public:
 
         this->tratament = new char[strlen(tratament) + 1];
         strcpy(this->tratament, tratament);
-
-        // this->tarif = programare.getPacient().calculeazaReducere(tarif);
-
     }
 
     Consultatie(const Consultatie& c) : programare(c.programare), tarif(c.tarif) {
@@ -561,11 +519,11 @@ void Consultatie::aplicaReducere() { tarif = programare.getPacient().calculeazaR
 
 std::ostream& operator<<(std::ostream& out, const Consultatie& C) {
     out<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
-    out<<"Consultatie la sectia "<<C.programare.getMedic().getSpecializare()<<" realizata de medic "<<C.programare.getMedic().getNume()<<" pentru pacient "<<C.programare.getPacient().getNume()<<".\n";
+    out<<"Consultatie la sectia "<<C.programare.getMedic().getSpecializare()<<" realizata de "<<C.programare.getMedic().getNume()<<" pentru pacient "<<C.programare.getPacient().getNume()<<".\n";
     out<<"Diagnostic: "<<C.diagnostic<<'\n';
     out<<"Tratament: "<<C.tratament<<'\n';
     out<<"Tarif: "<<C.tarif<<" RON\n";
-    out<<"Data: "<<C.programare.getData()<<", "<<C.programare.getOra()<<'\n';
+    out<<"Data si ora: "<<C.programare.getData()<<", "<<C.programare.getOra()<<'\n';
     out<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
     return out;
 }
@@ -580,45 +538,270 @@ void adaugaMedic(Medic*& medici, int& nrMedici, const Medic& medicNou) {
     nrMedici++;
 }
 
+void adaugaPacient(Pacient*& pacienti, int& nrPacienti, const Pacient& p) {
+    Pacient* temp = new Pacient[nrPacienti + 1];
+    for (int i = 0; i < nrPacienti; i++)
+        temp[i] = pacienti[i];
+    temp[nrPacienti] = p;
+    delete[] pacienti;
+    pacienti = temp;
+    nrPacienti++;
+}
+
+void adaugaProgramare(Programare*& programari, int& nrProgramari, const Programare& p, const Ora& start, const Ora& final) {
+    if (!p.getOra().respectaProgramCabinet(start, final)) {
+        std::cout << "Programare invalida - " <<p.getPacient().getNume() << ": Ora " << p.getOra()<< " este in afara programului cabinetului medical!\n";
+        return;
+    }
+
+    Data azi;
+    if (!p.esteInViitor(azi)) {
+        std::cout << "Programare invalida - " <<p.getPacient().getNume() << ": Programarea trebuie sa fie facuta in viitor. :)!\n";
+        return;
+    }
+
+    for (int i = 0; i < nrProgramari; i++) {
+        if (programari[i].conflictOrar(p)) {
+            std::cout << "Programare invalida - "<<p.getPacient().getNume()<< ": Conflict de orar cu programarea lui " << programari[i].getPacient().getNume() << "!\n";
+            return;
+        }
+    }
+
+    Programare* temp = new Programare[nrProgramari + 1];
+    for (int i = 0; i < nrProgramari; i++)
+        temp[i] = programari[i];
+    temp[nrProgramari] = p;
+    delete[] programari;
+    programari = temp;
+    nrProgramari++;
+}
+
+void adaugaConsultatie(Consultatie*& consultatii, int& nrConsultatii, const Consultatie& p) {
+    Consultatie* temp = new Consultatie[nrConsultatii + 1];
+    for (int i = 0; i < nrConsultatii; i++)
+        temp[i] = consultatii[i];
+    temp[nrConsultatii] = p;
+    delete[] consultatii;
+    consultatii = temp;
+    nrConsultatii++;
+}
+
+void adaugaReteta(Reteta*& retete, int& nrRetete, const Reteta& p) {
+    Reteta* temp = new Reteta[nrRetete + 1];
+    for (int i = 0; i < nrRetete; i++)
+        temp[i] = retete[i];
+    temp[nrRetete] = p;
+    delete[] retete;
+    retete = temp;
+    nrRetete++;
+}
+
+void afiseazaMeniu() {
+    std::cout<<"\n/===========================/\n";
+    std::cout<<"    Cabinetul medical MERCY\n";
+    std::cout<<"  Program zilnic: 8:00-16:00  ";
+    std::cout<<"\n/===========================/\n";
+    std::cout << "1. Afiseaza medici\n";
+    std::cout << "2. Afiseaza pacienti\n";
+    std::cout << "3. Afiseaza programari\n";
+    std::cout << "4. Afiseaza consultatii\n";
+    std::cout << "5. Afiseaza retete\n";
+    std::cout << "0. Iesire\n";
+    std::cout << "========================================\n";
+    std::cout << "Input: ";
+}
+
 int main() {
     int nrMedici = 0;
+    int nrPacienti = 0;
+    int nrProgramari = 0;
+    int nrConsultatii = 0;
+    int nrRetete = 0;
     Medic* medici = nullptr;
+    Pacient* pacienti = nullptr;
+    Programare* programari = nullptr;
+    Consultatie* consultatii = nullptr;
+    Reteta* retete = nullptr;
 
-    Data dataCurenta;
     Ora incepereProgram("8:00");
     Ora sfarsitProgram("16:00");
 
+    // Definire medici
     adaugaMedic(medici,nrMedici,Medic("Dr. Ghimbav Tudor","Cardiologie"));
     adaugaMedic(medici,nrMedici,Medic("Dr. Nicolaescu Raluca","Diabotologie"));
     adaugaMedic(medici,nrMedici,Medic("Dr. Conachiu Dumitru","Ortopedie"));
     adaugaMedic(medici,nrMedici,Medic("Dr. Ulmeanu Iuliana","Psihiatrie"));
+    adaugaMedic(medici,nrMedici,Medic("Dr. Barbu Cristian", "Neurologie"));
+    adaugaMedic(medici,nrMedici,Medic("Dr. Stanescu Ioana", "Dermatologie"));
 
-    for (int i=0; i<nrMedici; i++)
-        std::cout<<medici[i]<<'\n';
-    Pacient A("Ionescu Horia",18,"0739923187","asigurat");
-    Pacient X("Florescu Maria",50,"0738713187","neasigurat");
-    Pacient Z(A);
-    std::cout<<Z;
-    // Reteta reteta(Card,A,"Algocalmin, Ibuprofen",30, "24.03.2026");
-    // Reteta reteta2(Card,X,"Imraldi",90, "24.03.2026");
-    // std::cout<<reteta<<reteta2;
-    Programare p(A,medici[1],"25.03.2026","12:30");
-    Programare o(A,medici[2],"25.03.2026","13:00");
-    // std::cout<<p.conflictOrar(o);
-    // std::cout<<o.esteInViitor()
-    Consultatie C(p,"Artrita","Sortis",250);
-    std::cout<<C.generareReteta(30);
-    std::cout<<C;
-    C.aplicaReducere();
-    std::cout<<C;
-    // std::cout<<A.getNume();
-    Ora t("16:00");
-    std::cout<<t.respectaProgramCabinet(incepereProgram,sfarsitProgram);
-    std::cout<<*medici;
+    // Definire pacienti
+    adaugaPacient(pacienti,nrPacienti,Pacient("Ionescu Horia", 45, "0739923187", "asigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Florescu Maria", 70, "0738713187", "neasigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Hreniuc Mihai", 16, "0751234567", "asigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Constantin Elena", 30, "0769876543", "neasigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Vasilescu Ion", 72, "0722334455", "asigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Radu Alexandra", 10, "0733445566", "neasigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Marinescu Dan", 55, "0744556677", "asigurat"));
+    adaugaPacient(pacienti,nrPacienti,Pacient("Stoica Andreea", 28, "0755667788", "neasigurat"));
+
+    // Definire programari VALIDE
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[0], medici[0], "28.03.2026", "10:00"),
+        incepereProgram, sfarsitProgram);
+
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[1], medici[2], "28.03.2026", "11:00"),
+        incepereProgram, sfarsitProgram);
+
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[2], medici[3], "29.03.2026", "09:30"),
+        incepereProgram, sfarsitProgram);
+
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[4], medici[1], "29.03.2026", "14:00"),
+        incepereProgram, sfarsitProgram);
+
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[5], medici[4], "30.03.2026", "08:30"),
+        incepereProgram, sfarsitProgram);
+
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[6], medici[5], "30.03.2026", "12:00"),
+        incepereProgram, sfarsitProgram);
+
+    adaugaProgramare(programari, nrProgramari,
+        Programare(pacienti[7], medici[0], "30.03.2026", "15:00"),
+        incepereProgram, sfarsitProgram);
+
+
+    // Definire scenarii INVALIDE
+
+    std::cout << "\n---/ Scenariu: programare in afara programului /---\n";
+    adaugaProgramare(programari, nrProgramari,Programare(pacienti[3], medici[0], "28.03.2026", "18:00"),
+        incepereProgram, sfarsitProgram);
+
+    // Programare invalida (conflict orar)
+    std::cout << "\n---/ Scenariu: conflict de orar /---\n";
+    adaugaProgramare(programari, nrProgramari,Programare(pacienti[3], medici[0], "28.03.2026", "10:15"),
+        incepereProgram, sfarsitProgram);
+
+    // Data invalida (31 aprilie nu exista)
+    std::cout << "\n---/ Scenariu: data este invalida /---\n";
+    adaugaProgramare(programari, nrProgramari,Programare(pacienti[3], medici[1], "31.04.2026", "10:00"),
+        incepereProgram, sfarsitProgram);
+
+    // Ora invalida (25:00)
+    std::cout << "\n---/ Scenariu: ora este invalida /---\n";
+    adaugaProgramare(programari, nrProgramari,Programare(pacienti[3], medici[1], "28.03.2026", "25:00"),
+        incepereProgram, sfarsitProgram);
+
+    // Efectuarea consultatiilor si generarea retetelor
+    Consultatie c1(programari[0], "Hipertensiune arteriala","Azomezartan 40mg", 250);
+    c1.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c1);
+    adaugaReteta(retete, nrRetete, c1.generareReteta(30));
+
+    Consultatie c2(programari[1], "Artrita reumatoida","Ibuprofen 400mg", 300);
+    c2.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c2);
+    adaugaReteta(retete, nrRetete, c2.generareReteta(45));
+
+    Consultatie c3(programari[2], "Tulburare de anxietate","Terapie cognitiv-comportamentala", 400);
+    c3.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c3);
+    adaugaReteta(retete, nrRetete, c3.generareReteta(90));
+
+    Consultatie c4(programari[3], "Diabet zaharat tip 2","Metformin 1000mg", 280);
+    c4.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c4);
+    adaugaReteta(retete, nrRetete, c4.generareReteta(60));
+
+    Consultatie c5(programari[4], "Epilepsie juvenila","Levetiracetam 250mg", 350);
+    c5.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c5);
+    adaugaReteta(retete, nrRetete, c5.generareReteta(180));
+
+    Consultatie c6(programari[5], "Dermatita atopica","Elidel crema, Cetirizina 10mg", 200);
+    c6.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c6);
+    adaugaReteta(retete, nrRetete, c6.generareReteta(21));
+
+    Consultatie c7(programari[6], "Tahicardie sinusala","Bisoprolol 5mg", 250);
+    c7.aplicaReducere();
+    adaugaConsultatie(consultatii, nrConsultatii, c7);
+    adaugaReteta(retete, nrRetete, c7.generareReteta(14));
+
+    int optiune;
+    do {
+        afiseazaMeniu();
+        std::cin >> optiune;
+
+        switch (optiune) {
+        case 1:
+            std::cout << "\n--- MEDICI (" << nrMedici << ") ---\n";
+            for (int i = 0; i < nrMedici; i++)
+                std::cout << i + 1 << ". " << medici[i] << '\n';
+            break;
+
+        case 2:
+            std::cout << "\n--- PACIENTI (" << nrPacienti << ") ---\n";
+            for (int i = 0; i < nrPacienti; i++)
+                std::cout << i + 1 << ". " << pacienti[i];
+            break;
+
+        case 3:
+            std::cout << "\n--- PROGRAMARI (" << nrProgramari << ") ---\n";
+            for (int i = 0; i < nrProgramari; i++)
+                std::cout << i + 1 << ". " << programari[i] << '\n';
+            break;
+
+        case 4:
+            std::cout << "\n--- CONSULTATII (" << nrConsultatii << ") ---\n";
+            for (int i = 0; i < nrConsultatii; i++)
+                std::cout << consultatii[i];
+            break;
+
+        case 5:
+            std::cout << "\n--- RETETE (" << nrRetete << ") ---\n";
+            for (int i = 0; i < nrRetete; i++)
+                std::cout << retete[i];
+            break;
+
+        case 6:
+            std::cout << "\n--- MEDICI (" << nrMedici << ") ---\n";
+            for (int i = 0; i < nrMedici; i++)
+                std::cout << i + 1 << ". " << medici[i] << '\n';
+
+            std::cout << "\n--- PACIENTI (" << nrPacienti << ") ---\n";
+            for (int i = 0; i < nrPacienti; i++)
+                std::cout << i + 1 << ". " << pacienti[i];
+
+            std::cout << "\n--- PROGRAMARI (" << nrProgramari << ") ---\n";
+            for (int i = 0; i < nrProgramari; i++)
+                std::cout << i + 1 << ". " << programari[i] << '\n';
+
+            std::cout << "\n--- CONSULTATII (" << nrConsultatii << ") ---\n";
+            for (int i = 0; i < nrConsultatii; i++)
+                std::cout << consultatii[i];
+
+            std::cout << "\n--- RETETE (" << nrRetete << ") ---\n";
+            for (int i = 0; i < nrRetete; i++)
+                std::cout << retete[i];
+            break;
+
+        case 0:
+            std::cout << "\nLa revedere! Cabinetul Medical Mercy.\n";
+            break;
+
+        default:
+            std::cout << "Optiune invalida! Alegeti intre 0 si 5.\n";
+        }
+    } while (optiune != 0);
+
     delete[] medici;
-    // delete[] pacienti;
-    // delete[] programari;
-    // delete[] retete;
-    // delete[] consultatii;
+    delete[] pacienti;
+    delete[] programari;
+    delete[] retete;
+    delete[] consultatii;
     return 0;
 }

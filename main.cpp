@@ -1,3 +1,4 @@
+//Petcovici Alexandru - Stefan, grupa 132.2
 // Cabinetul medical Mercy este alcatuit din urmatoarele entitati:
 // Pacientii - sunt cei care vin la cabinet pentru a beneficia de servicii medicale care sunt oferite doar pe baza de programare
 // Medicii - sunt cei care efectueaza serviciile medicale

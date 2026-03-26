@@ -53,7 +53,7 @@ class Data {
             return false;
         if (l < 1 || l > 12)
             return false;
-        if (z < 1 || z > zileLuna(l, a))
+        if (z < 1 || z > zileLuna(l,a))
             return false;
         return true;
     }
@@ -498,6 +498,15 @@ public:
         return *this;
     }
 
+    // Getters
+    const Data& getData() const {
+        return programare.getData();
+    }
+
+    const float getTarif() const {
+        return tarif;
+    }
+
     friend std::ostream& operator<<(std::ostream& out, const Consultatie& C);
 
     ~Consultatie() {
@@ -585,6 +594,7 @@ void adaugaConsultatie(Consultatie*& consultatii, int& nrConsultatii, const Cons
     delete[] consultatii;
     consultatii = temp;
     nrConsultatii++;
+
 }
 
 void adaugaReteta(Reteta*& retete, int& nrRetete, const Reteta& p) {
@@ -597,6 +607,33 @@ void adaugaReteta(Reteta*& retete, int& nrRetete, const Reteta& p) {
     nrRetete++;
 }
 
+void adaugaData(Data*& date, int& nrDate, const Data& d) {
+    Data* temp = new Data[nrDate + 1];
+    for (int i = 0; i < nrDate; i++)
+        temp[i] = date[i];
+    temp[nrDate] = d;
+    delete[] date;
+    date = temp;
+    nrDate++;
+}
+
+bool existaData(Data*& date, int& nrDate, const Data& data) {
+    for (int i = 0; i < nrDate; i++)
+        if (date[i] == data)
+            return true;
+    return false;
+}
+
+float incasariTotale(Consultatie*& consultatii, int& nrConsultatii, const Data& data) {
+    float total = 0;
+    for (int i=0; i<nrConsultatii; i++) {
+        if (consultatii[i].getData() == data)
+            total += consultatii[i].getTarif();
+    }
+    return total;
+
+}
+
 void afiseazaMeniu() {
     std::cout<<"\n/===========================/\n";
     std::cout<<"    Cabinetul medical MERCY\n";
@@ -607,6 +644,8 @@ void afiseazaMeniu() {
     std::cout << "3. Afiseaza programari\n";
     std::cout << "4. Afiseaza consultatii\n";
     std::cout << "5. Afiseaza retete\n";
+    std::cout << "6. Afiseaza tot\n";
+    std::cout << "7. Afiseaza total incasari pentru ziua selectata\n";
     std::cout << "0. Iesire\n";
     std::cout << "========================================\n";
     std::cout << "Input: ";
@@ -618,18 +657,20 @@ int main() {
     int nrProgramari = 0;
     int nrConsultatii = 0;
     int nrRetete = 0;
+    int nrDate = 0;
     Medic* medici = nullptr;
     Pacient* pacienti = nullptr;
     Programare* programari = nullptr;
     Consultatie* consultatii = nullptr;
     Reteta* retete = nullptr;
+    Data* date = nullptr;
 
     Ora incepereProgram("8:00");
     Ora sfarsitProgram("16:00");
 
     // Definire medici
     adaugaMedic(medici,nrMedici,Medic("Dr. Ghimbav Tudor","Cardiologie"));
-    adaugaMedic(medici,nrMedici,Medic("Dr. Nicolaescu Raluca","Diabotologie"));
+    adaugaMedic(medici,nrMedici,Medic("Dr. Nicolaescu Raluca","Diabetologie"));
     adaugaMedic(medici,nrMedici,Medic("Dr. Conachiu Dumitru","Ortopedie"));
     adaugaMedic(medici,nrMedici,Medic("Dr. Ulmeanu Iuliana","Psihiatrie"));
     adaugaMedic(medici,nrMedici,Medic("Dr. Barbu Cristian", "Neurologie"));
@@ -732,9 +773,22 @@ int main() {
     adaugaConsultatie(consultatii, nrConsultatii, c7);
     adaugaReteta(retete, nrRetete, c7.generareReteta(14));
 
-    int optiune;
+    for (int i = 0; i < nrConsultatii; i++)
+        if (!existaData(date,nrDate,consultatii[i].getData()))
+            adaugaData(date,nrDate,consultatii[i].getData());
+
+    int optiune = -1;
     do {
-        afiseazaMeniu();
+        if (optiune != 7)
+            afiseazaMeniu();
+        else {
+            std::cout<<"Input: ";
+            std::cin >> optiune;
+            std::cout<< "Incasari totale in data "<< date[optiune-1]<<": ";
+            std::cout << incasariTotale(consultatii,nrConsultatii,date[optiune-1]) << " RON\n";
+            afiseazaMeniu();
+        }
+
         std::cin >> optiune;
 
         switch (optiune) {
@@ -790,10 +844,14 @@ int main() {
                 std::cout << retete[i];
             break;
 
+        case 7:
+            std::cout<<"Selectati data:\n";
+            for (int i = 0; i < nrDate; i++)
+                std::cout<<'('<< i+1 << ") "<<date[i]<<'\n';
+            break;
         case 0:
             std::cout << "\nLa revedere! Cabinetul Medical Mercy.\n";
             break;
-
         default:
             std::cout << "Optiune invalida! Alegeti intre 0 si 5.\n";
         }
@@ -804,5 +862,6 @@ int main() {
     delete[] programari;
     delete[] retete;
     delete[] consultatii;
+    delete[] date;
     return 0;
 }

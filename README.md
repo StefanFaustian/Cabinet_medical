@@ -32,3 +32,8 @@ Datele de intrare sunt predefinite în programul principal și cuprind:
 * Generarea rețetelor: o rețetă este creată automat în urma unei consultații, preluând datele medicului, pacientului și tratamentul prescris;
 * Gestionarea listelor: adăugarea dinamică a medicilor, pacienților, programărilor, consultațiilor și rețetelor în colecții alocate dinamic;
 * Afișarea datelor: vizualizarea tuturor entităților înregistrate în sistem prin intermediul unui meniu interactiv bazat pe selectia unor optiuni date.
+
+
+**Surse auxiliare utilizate:**
+- pentru functia predefinita sscanf() - https://www.w3schools.com/c/ref_stdio_sscanf.php 
+

@@ -404,7 +404,7 @@ class Programare
     Data dataProgramarii;
     Ora oraProgramarii;
 public:
-    Programare() {}
+    Programare() {} // constructor fara parametri, nu are nevoie de lista de initializare, entitatile se initializeaza automat
 
     Programare(const Pacient& pacient, const Medic& medic, const Data& dataProgramarii, const Ora& oraProgramarii)
     : pacient(pacient), medic(medic), dataProgramarii(dataProgramarii), oraProgramarii(oraProgramarii) {}
@@ -429,16 +429,16 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Programare& P);
 
-    bool esteInViitor(const Data& dataAzi) const;
+    bool esteInViitor(const Data& dataAzi) const; // util pentru ca o programare trebuie facuta in viitor
     bool conflictOrar(const Programare& alta, int durataMedieConsultatieMinute = 30) const;
 };
 
 bool Programare::conflictOrar(const Programare& alta, int durataMedieConsultatieMinute) const {
-    if (!(medic == alta.medic))
+    if (!(medic == alta.medic)) // daca programarea se face in aceeasi zi, dar la alt medic, e ok!
         return false;
-    if (!(dataProgramarii == alta.dataProgramarii))
+    if (!(dataProgramarii == alta.dataProgramarii)) // daca programarea se face la acelasi medic, dar in zile diferite, e ok!
         return false;
-    if (oraProgramarii.diferentaOre(alta.oraProgramarii) >= durataMedieConsultatieMinute)
+    if (oraProgramarii.diferentaOre(alta.oraProgramarii) >= durataMedieConsultatieMinute) // daca programarile nu se suprapun, e ok!
         return false;
     return true;
 }
@@ -538,6 +538,7 @@ std::ostream& operator<<(std::ostream& out, const Consultatie& C) {
     return out;
 }
 
+// Functii de adaugare in array-urile dinamice de entitati
 void adaugaMedic(Medic*& medici, int& nrMedici, const Medic& medicNou) {
     Medic* temp = new Medic[nrMedici + 1];
     for (int i = 0; i < nrMedici; i++)
@@ -617,6 +618,8 @@ void adaugaData(Data*& date, int& nrDate, const Data& d) {
     nrDate++;
 }
 
+// Functie care verifica daca o data se afla in array-ul dinamic de date calendaristice
+// Este utila la interogarea incasarilor dintr-o zi selectata.
 bool existaData(Data*& date, int& nrDate, const Data& data) {
     for (int i = 0; i < nrDate; i++)
         if (date[i] == data)
@@ -624,6 +627,7 @@ bool existaData(Data*& date, int& nrDate, const Data& data) {
     return false;
 }
 
+// Functie de determinare a incasarilor dupa consultatii
 float incasariTotale(Consultatie*& consultatii, int& nrConsultatii, const Data& data) {
     float total = 0;
     for (int i=0; i<nrConsultatii; i++) {

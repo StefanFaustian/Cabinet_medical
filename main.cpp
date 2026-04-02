@@ -58,6 +58,7 @@ class Data {
         return true;
     }
 public:
+    // constructor cu parametri cu valori implicite
     Data(const int zi=26, const int luna=3, const int an=2026) {
         if (esteValida(zi, luna, an)) {
             this->zi = zi;
@@ -70,10 +71,12 @@ public:
             this->an = 2026;
         }
     }
+    // constructor de copiere
     Data(const Data& nou) : zi(nou.zi), luna(nou.luna), an(nou.an) {}
+    // constructor pentru data care primeste ca parametru un sir de caractere
     Data(const char* data) {
         int z, l, a;
-        sscanf(data, "%d.%d.%d", &z, &l, &a);
+        sscanf(data, "%d.%d.%d", &z, &l, &a); // parsarea
         if (esteValida(z, l, a)) {
             zi = z;
             luna = l;
@@ -85,7 +88,7 @@ public:
             an = 2026;
         }
     }
-
+    // supraincarcarea operatorului =
     Data& operator=(const Data& nou) {
         if (this != &nou) {
             zi = nou.zi;
@@ -124,6 +127,7 @@ class Ora {
         return o >= 0 && o <= 23 && m >= 0 && m <= 59;
     }
 public:
+    // constructor cu parametri cu valori implicite
     Ora(const int ora = 8, const int minut = 0) {
         if (esteValida(ora, minut)) {
             this->ora = ora;
@@ -134,11 +138,13 @@ public:
             this->minut = 0;
         }
     }
+    // constructor de copiere
     Ora(const Ora& nou) : ora(nou.ora), minut(nou.minut) {}
 
+    // constructor pentru ora care primeste ca parametru un sir de caractere
     Ora(const char* timp) {
         int o, m;
-        sscanf(timp, "%d:%d", &o, &m);
+        sscanf(timp, "%d:%d", &o, &m); // parsarea
         if (esteValida(o, m)) {
             ora = o;
             minut = m;
@@ -149,6 +155,7 @@ public:
         }
     }
 
+    // supraincarcarea operatorului =
     Ora& operator=(const Ora& nou) {
         if (this != &nou) {
             ora = nou.ora;
@@ -157,9 +164,10 @@ public:
         return *this;
     }
 
+    // supraincarcarea operatorului <= este esentiala pentru o comparatie mai facila intre ore
     bool operator<=(const Ora& nou) const {
-        if (ora < nou.ora) return true;
-        if (ora == nou.ora && minut <= nou.minut) return true;
+        if (ora < nou.ora) return true; // this->ora mai mica decat ora cu care este comparata, e ok!
+        if (ora == nou.ora && minut <= nou.minut) return true; // avem aceleasi ore, dar this->minut e mai mic sau egal cu minutul orei comparate, e ok!
         return false;
     }
 
@@ -178,11 +186,13 @@ std::ostream& operator<<(std::ostream& out, const Ora& o) {
     return out;
 }
 
+// ora trebuie sa fie in intervalul de functionare a cabinetului [start,final]
 bool Ora::respectaProgramCabinet(const Ora& start, const Ora& final) const {
     if (start <= *this && *this <= final) return true;
     return false;
 }
 
+// diferenta intre ore se face prin transformarea in minute
 int Ora::diferentaOre(const Ora& nou) const { return abs((ora*60+minut)-(nou.ora*60+nou.minut)); }
 
 class Pacient {
@@ -199,6 +209,7 @@ public:
         strcpy(telefon,"Necompletat");
     }
 
+    // constructor cu parametri
     Pacient(const char* nume, int varsta, const char* telefon, const char* asiguratStatus) : varsta(varsta) {
         this->nume = new char[strlen(nume) + 1];
         strcpy(this->nume, nume);
@@ -208,13 +219,14 @@ public:
         char* temp = trim(asiguratStatus);    // sir de caractere auxiliar
         for (int i = 0; i<strlen(temp); i++)
             temp[i] = tolower(temp[i]);
-        if (strcmp(temp,"asigurat") == 0)
-            this->asigurat = true;
-        else
+        if (strcmp(temp,"asigurat") == 0) // atribuirea booleanului asigurat se realizeaza in baza parametrului asiguratStatus
+            this->asigurat = true;        // pacientul va fi neasigurat implicit si setat ca asigurat doar daca in constructor
+        else                              // primeste cuvantul "asigurat" (case insensitive)
             this->asigurat = false;
         delete[] temp;
     }
 
+    // constructor de copiere
     Pacient(const Pacient& nou) : varsta(nou.varsta), asigurat(nou.asigurat) {
         nume = new char[strlen(nou.nume) + 1];
         strcpy(nume, nou.nume);
@@ -235,6 +247,7 @@ public:
         return asigurat;
     }
 
+    // supraincarcarea operatorului =
     Pacient& operator=(const Pacient& nou) {
         if (this != &nou) {
             delete[] nume;
@@ -268,8 +281,8 @@ std::ostream& operator<<(std::ostream& out, const Pacient& P) {
 float Pacient::calculeazaReducere(float tarifInitial) const {
     float tarif = tarifInitial;
     if (asigurat) tarif = tarif * 0.5; // 50% reducere pentru pacientii asigurati
-    if (varsta >= 65) tarif = tarif * 0.95; // 5% reducere pentru pensionari
-    if (varsta < 18) tarif = tarif * 0.8; // 20% reducere pentru copii
+    if (varsta >= 65) tarif = tarif * 0.95; // 5% reducere bonus pentru pensionari
+    if (varsta < 18) tarif = tarif * 0.8; // 20% reducere bonus pentru copii
 
     return tarif;
 }
@@ -279,20 +292,21 @@ class Medic {
     char* specializare;
 
 public:
+    // constructor fara parametri
     Medic() {
         nume = new char[strlen("Necompletat") + 1];
         strcpy(nume, "Necompletat");
         specializare = new char[strlen("Necompletat") + 1];
         strcpy(specializare,"Necompletat");
     }
-
+    // constructor cu parametri
     Medic(const char* nume, const char* specializare) {
         this->nume = new char[strlen(nume) + 1];
         strcpy(this->nume, nume);
         this->specializare = new char[strlen(specializare) + 1];
         strcpy(this->specializare, specializare);
     }
-
+    // constructor de copiere
     Medic(const Medic& nou) {
         this->nume = new char[strlen(nou.nume) + 1];
         strcpy(nume, nou.nume);
@@ -308,7 +322,7 @@ public:
     const char* getSpecializare() const {
         return specializare;
     }
-
+    // supraincarcarea operatorului =
     Medic& operator=(const Medic& nou) {
         if (this != &nou) {
             delete[] nume;
@@ -430,7 +444,7 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const Programare& P);
 
     bool esteInViitor(const Data& dataAzi) const; // util pentru ca o programare trebuie facuta in viitor
-    bool conflictOrar(const Programare& alta, int durataMedieConsultatieMinute = 30) const;
+    bool conflictOrar(const Programare& alta, int durataMedieConsultatieMinute = 30) const; // durata medie a unei consultatii poate fi modificata
 };
 
 bool Programare::conflictOrar(const Programare& alta, int durataMedieConsultatieMinute) const {
@@ -459,12 +473,14 @@ class Consultatie {
     char* tratament;
     float tarif;
 public:
+    // constructor fara parametri
     Consultatie() : tarif(0) {
         diagnostic = new char[strlen("Necompletat") + 1];
         strcpy(diagnostic, "Necompletat");
         tratament = new char[strlen("Necompletat") + 1];
         strcpy(tratament,"Necompletat");
     }
+    // constructor cu parametri
     Consultatie(const Programare& programare, const char* diagnostic, const char* tratament, float tarif)
     : programare(programare), tarif(tarif) {
         this->diagnostic = new char[strlen(diagnostic) + 1];
@@ -473,7 +489,7 @@ public:
         this->tratament = new char[strlen(tratament) + 1];
         strcpy(this->tratament, tratament);
     }
-
+    // constructor de copiere
     Consultatie(const Consultatie& c) : programare(c.programare), tarif(c.tarif) {
         diagnostic = new char[strlen(c.diagnostic) + 1];
         strcpy(diagnostic, c.diagnostic);
@@ -482,6 +498,7 @@ public:
         strcpy(tratament, c.tratament);
     }
 
+    // supraincarcarea operatorului =
     Consultatie& operator=(const Consultatie& c) {
         if (this != &c) {
             programare = c.programare;
@@ -518,6 +535,7 @@ public:
     void aplicaReducere();
 };
 
+// generarea retetelor, durataTratamentului e data ca parametru pentru modificari ulterioare
 Reteta Consultatie::generareReteta(int durataTratament) {
     return Reteta(programare.getMedic(),
                   programare.getPacient(),
@@ -595,7 +613,6 @@ void adaugaConsultatie(Consultatie*& consultatii, int& nrConsultatii, const Cons
     delete[] consultatii;
     consultatii = temp;
     nrConsultatii++;
-
 }
 
 void adaugaReteta(Reteta*& retete, int& nrRetete, const Reteta& p) {
@@ -635,9 +652,9 @@ float incasariTotale(Consultatie*& consultatii, int& nrConsultatii, const Data& 
             total += consultatii[i].getTarif();
     }
     return total;
-
 }
 
+// utilizatorul poate sa calculeze numarul de incasari intr-o zi anume cu optiunea 7
 void afiseazaMeniu() {
     std::cout<<"\n/===========================/\n";
     std::cout<<"    Cabinetul medical MERCY\n";
@@ -857,7 +874,7 @@ int main() {
             std::cout << "\nLa revedere! Cabinetul Medical Mercy.\n";
             break;
         default:
-            std::cout << "Optiune invalida! Alegeti intre 0 si 5.\n";
+            std::cout << "Optiune invalida! Alegeti intre 0 si 7.\n";
         }
     } while (optiune != 0);
 
